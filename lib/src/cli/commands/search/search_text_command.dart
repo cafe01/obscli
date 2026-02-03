@@ -67,11 +67,11 @@ class SearchTextCommand extends Command<int> {
 
           for (final match in matches) {
             if (match is Map<String, dynamic>) {
-              final line = match['line'] as int? ?? 0;
-              final context = match['match'] as String? ??
-                            match['context'] as String? ?? '';
+              // API returns match info in 'match' object and text in 'context'
+              final context = match['context'] as String? ?? '';
+              // Line numbers not provided by API, use filename only
               // ignore: avoid_print
-              print('$filename:$line -- $context');
+              print('$filename -- $context');
             }
           }
         }

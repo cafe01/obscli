@@ -851,7 +851,7 @@ obs search text <query> [--context-length <n>] [--json]
 - `--json`: Output raw JSON array
 
 **Default output:**
-Grep-like format: `filename:line -- ...match context...`
+Grep-like format: `filename -- ...match context...`
 
 **Examples:**
 
@@ -861,9 +861,9 @@ obs search text "TODO"
 ```
 
 ```
-daily/2026-02-03.md:15 -- - TODO: Review PR
-projects/bentos.md:42 -- TODO: Add tests
-inbox/ideas.md:8 -- TODO: Explore this concept
+daily/2026-02-03.md -- - TODO: Review PR
+projects/bentos.md -- TODO: Add tests
+inbox/ideas.md -- TODO: Explore this concept
 ```
 
 ```bash
@@ -880,9 +880,13 @@ obs search text "TODO" --json
 [
   {
     "filename": "daily/2026-02-03.md",
-    "line": 15,
-    "match": "TODO: Review PR",
-    "context": "- TODO: Review PR"
+    "score": 0.85,
+    "matches": [
+      {
+        "match": {"start": 2, "end": 6},
+        "context": "- TODO: Review PR"
+      }
+    ]
   }
 ]
 ```
@@ -1367,8 +1371,8 @@ obs api /periodic/daily/ -H "Accept: application/vnd.olrapi.note+json"
 ```
 
 ```bash
-# POST request
-obs api /search/simple/ -X POST --body '{"query": "test"}'
+# POST with query params (search uses query params, not body)
+obs api "/search/simple/?query=test" -X POST
 ```
 
 ```bash

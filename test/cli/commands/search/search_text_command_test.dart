@@ -22,11 +22,11 @@ void main() {
             'filename': 'note.md',
             'matches': <dynamic>[
               <String, dynamic>{
-                'line': 5,
-                'match': 'This is a test match',
+                'match': <String, dynamic>{'start': 10, 'end': 14},
+                'context': 'This is a test match',
               },
               <String, dynamic>{
-                'line': 10,
+                'match': <String, dynamic>{'start': 8, 'end': 12},
                 'context': 'Another test here',
               },
             ],
@@ -37,8 +37,8 @@ void main() {
       final result = await runCapturing(runner, ['search', 'text', 'test']);
 
       expect(result.code, 0);
-      expect(result.output, contains('note.md:5 -- This is a test match'));
-      expect(result.output, contains('note.md:10 -- Another test here'));
+      expect(result.output, contains('note.md -- This is a test match'));
+      expect(result.output, contains('note.md -- Another test here'));
     });
 
     test('displays JSON with --json flag', () async {

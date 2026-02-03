@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 
 import '../api/http_obsidian_api.dart';
 import '../api/obsidian_api.dart';
@@ -105,7 +106,17 @@ class ObsCommandRunner extends CommandRunner<int> {
       flagApiKey: _globalResults?['api-key'] as String?,
       store: store,
     );
-    return HttpObsidianApi(client: http.Client(), config: resolver);
+    return HttpObsidianApi(client: _createHttpClient(), config: resolver);
+  }
+
+  /// Creates an HTTP client that allows self-signed certificates for localhost.
+  http.Client _createHttpClient() {
+    final ioClient = HttpClient()
+      ..badCertificateCallback = (cert, host, port) {
+        // Allow self-signed certificates for localhost/127.0.0.1
+        return host == 'localhost' || host == '127.0.0.1';
+      };
+    return IOClient(ioClient);
   }
 
   @override

@@ -101,7 +101,9 @@ class HttpObsidianApi implements ObsidianApi {
 
   @override
   Future<List<Map<String, dynamic>>> listDirectory([String path = '/']) async {
-    final uri = _uri('/vault/$path');
+    // Normalize path: remove leading slash to avoid double slashes
+    final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    final uri = _uri('/vault/$normalizedPath');
     final response = await _client.get(
       uri,
       headers: _headers(accept: 'application/json'),
@@ -109,7 +111,16 @@ class HttpObsidianApi implements ObsidianApi {
     _checkResponse(response);
     final json = _parseJson(response);
     final files = json['files'] as List<dynamic>;
-    return files.cast<Map<String, dynamic>>();
+
+    // API returns strings with trailing '/' for directories
+    return files.map((item) {
+      final name = item as String;
+      final isFolder = name.endsWith('/');
+      return <String, dynamic>{
+        'name': isFolder ? name.substring(0, name.length - 1) : name,
+        'type': isFolder ? 'folder' : 'file',
+      };
+    }).toList();
   }
 
   @override
@@ -389,20 +400,22 @@ class HttpObsidianApi implements ObsidianApi {
     String query, {
     int? contextLength,
   }) async {
-    final uri = _uri('/search/simple/');
-    final requestBody = <String, dynamic>{'query': query};
+    final queryParams = <String, String>{'query': query};
     if (contextLength != null) {
-      requestBody['contextLength'] = contextLength;
+      queryParams['contextLength'] = contextLength.toString();
     }
+    final uri = _uri('/search/simple/', queryParams: queryParams);
     final response = await _client.post(
       uri,
-      headers: _headers(contentType: 'application/json'),
-      body: jsonEncode(requestBody),
+      headers: _headers(),
     );
     _checkResponse(response);
-    final json = _parseJson(response);
-    final results = json['results'] as List<dynamic>?;
-    return results?.cast<Map<String, dynamic>>() ?? [];
+    // API returns array directly, not wrapped in object
+    final dynamic decoded = jsonDecode(response.body);
+    if (decoded is List) {
+      return decoded.cast<Map<String, dynamic>>();
+    }
+    return [];
   }
 
   @override
